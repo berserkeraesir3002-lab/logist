@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Ubicación Corporativa</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 40px 20px; background-color: #f0f2f5; color: #333; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+        h2 { color: #1a73e8; }
+        p { font-size: 1.1em; line-height: 1.5; }
+        button { background: #1a73e8; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 8px; cursor: pointer; transition: 0.3s; width: 100%; font-weight: bold; }
+        button:hover { background: #1557b0; }
+        #status { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Confirmación de Ubicación</h2>
+        <p>Presione el botón para registrar su llegada o ubicación actual en el panel de presidencia.</p>
+        
+        <button onclick="enviarUbicacion()">ENVIAR MI UBICACIÓN</button>
+        <p id="status"></p>
+    </div>
+
+    <script>
+        function enviarUbicacion() {
+            const status = document.getElementById('status');
+            const urlParams = new URLSearchParams(window.location.search);
+            // El nombre se toma del link de WhatsApp
+            const nombreEmpleado = urlParams.get('id') || "Empleado_Anonimo";
+
+            if (!navigator.geolocation) {
+                status.innerText = "Error: Tu teléfono no soporta GPS en el navegador.";
+                return;
+            }
+
+            status.innerText = "Localizando dispositivo...";
+            status.style.color = "#555";
+
+            navigator.geolocation.getCurrentPosition((position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                
+                // Tu ID de Google Apps Script ya integrado
+                const scriptURL = "https://script.google.com/macros/s/AKfycbzjc5-YSH9bfF-bcKvsFn6TxoC4v7_qk2dQ3qBFfxpd4nF12PLKZz4bx5GjEVv11BWN/exec";
+
+                fetch(`${scriptURL}?nombre=${nombreEmpleado}&lat=${lat}&lon=${lon}`, { mode: 'no-cors' })
+                    .then(() => {
+                        status.innerText = "✔ Ubicación enviada con éxito.";
+                        status.style.color = "green";
+                    })
+                    .catch(err => {
+                        status.innerText = "Error al conectar con el servidor.";
+                        status.style.color = "red";
+                    });
+
+            }, (error) => {
+                status.innerText = "Error: Debes permitir el acceso al GPS para que el reporte funcione.";
+                status.style.color = "red";
+            }, { enableHighAccuracy: true });
+        }
+    </script>
+</body>
+</html>
