@@ -29,56 +29,53 @@
 </div>
 
 <script>
-    function capturarYEnviar() {
-        const mensaje = document.getElementById('mensaje');
-        const loader = document.getElementById('loader');
-        const urlParams = new URLSearchParams(window.location.search);
-        
-        // Obtiene el nombre del empleado desde el link de WhatsApp (ej: ?id=Juan)
-        const nombreEmpleado = urlParams.get('id') || "Empleado_Sin_Nombre";
+function capturarYEnviar() {
+    const mensaje = document.getElementById('mensaje');
+    const loader = document.getElementById('loader');
+    const urlParams = new URLSearchParams(window.location.search);
+    const nombreEmpleado = urlParams.get('id') || "Empleado_Sin_Nombre";
 
-        if (!navigator.geolocation) {
-            mensaje.innerText = "Error: Su teléfono no permite GPS desde el navegador.";
-            mensaje.style.color = "red";
-            return;
-        }
+    if (!navigator.geolocation) {
+        mensaje.innerText = "Error: Su dispositivo no soporta GPS desde el navegador.";
+        mensaje.style.color = "red";
+        return;
+    }
 
-        // Mostrar carga
-        mensaje.innerText = "Localizando dispositivo...";
-        mensaje.style.color = "#555";
-        loader.style.display = "block";
+    mensaje.innerText = "Localizando dispositivo...";
+    mensaje.style.color = "#555";
+    loader.style.display = "block";
 
-        navigator.geolocation.getCurrentPosition((posicion) => {
+    navigator.geolocation.getCurrentPosition(
+        (posicion) => {
             const lat = posicion.coords.latitude;
             const lon = posicion.coords.longitude;
-            
-            // TU LINK DE GOOGLE YA INTEGRADO
+            // Debes configurar tu propio Google Apps Script que acepte estos parámetros
             const scriptURL = "https://script.google.com/macros/s/AKfycbzjc5-YSH9bfF-bcKvsFn6TxoC4v7_qk2dQ3qBFfxpd4nF12PLKZz4bx5GjEVv11BWN/exec";
 
-            // Envío de datos al Google Sheet
-            fetch(`${scriptURL}?nombre=${encodeURIComponent(nombreEmpleado)}&lat=${lat}&lon=${lon}`, {
-                mode: 'no-cors'
-            })
+            fetch(`${scriptURL}?nombre=${encodeURIComponent(nombreEmpleado)}&lat=${lat}&lon=${lon}`, { mode: 'no-cors' })
             .then(() => {
                 loader.style.display = "none";
                 mensaje.innerText = "✔ Ubicación enviada con éxito. Puede cerrar esta ventana.";
                 mensaje.style.color = "green";
             })
-            .catch(error => {
+            .catch(() => {
                 loader.style.display = "none";
                 mensaje.innerText = "Error en la red. Intente de nuevo.";
                 mensaje.style.color = "red";
             });
 
-        }, (error) => {
+        },
+        (error) => {
             loader.style.display = "none";
             mensaje.innerText = "Error: Debe aceptar el permiso de GPS para completar el registro.";
             mensaje.style.color = "red";
-        }, {
+        },
+        {
             enableHighAccuracy: true,
             timeout: 10000
-        });
-    }
+        }
+    );
+}
 </script>
 
 </body>
