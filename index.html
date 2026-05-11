@@ -1,82 +1,66 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Logística - Presidencia</title>
-    <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; padding: 40px 20px; background-color: #e9ecef; color: #333; }
-        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 450px; margin: auto; }
-        h1 { color: #0d47a1; font-size: 24px; margin-bottom: 10px; }
-        p { color: #666; margin-bottom: 25px; }
-        .btn-enviar { background: #1565c0; color: white; border: none; padding: 18px 35px; font-size: 18px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; transition: background 0.3s; }
-        .btn-enviar:hover { background: #0d47a1; }
-        #mensaje { margin-top: 25px; font-weight: bold; font-size: 16px; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 2s linear infinite; display: none; margin: 15px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h1>Confirmación de Ubicación</h1>
-    <p>Por favor, presione el botón para registrar su posición actual en el sistema logístico de la empresa.</p>
-    
-    <button class="btn-enviar" onclick="capturarYEnviar()">ENVIAR MI UBICACIÓN</button>
-    
-    <div id="loader" class="loader"></div>
-    <div id="mensaje"></div>
-</div>
-
-<script>
 function capturarYEnviar() {
     const mensaje = document.getElementById('mensaje');
     const loader = document.getElementById('loader');
     const urlParams = new URLSearchParams(window.location.search);
     const nombreEmpleado = urlParams.get('id') || "Empleado_Sin_Nombre";
+    const linkMapsDiv = document.getElementById('link-maps');
+
+    linkMapsDiv.innerHTML = "";
 
     if (!navigator.geolocation) {
-        mensaje.innerText = "Error: Su dispositivo no soporta GPS desde el navegador.";
+        mensaje.innerText = "Error: Su teléfono no permite GPS desde el navegador.";
         mensaje.style.color = "red";
         return;
     }
 
-    mensaje.innerText = "Localizando dispositivo...";
+    // Detectar idioma del navegador
+    const lang = navigator.language || navigator.userLanguage;
+    // Mensaje localizado
+    let locatingMsg = "Localizando dispositivo...";
+    if (lang.startsWith("zh")) {
+        locatingMsg = "正在定位设备...";
+    }
+
+    mensaje.innerText = locatingMsg;
     mensaje.style.color = "#555";
     loader.style.display = "block";
 
-    navigator.geolocation.getCurrentPosition(
-        (posicion) => {
-            const lat = posicion.coords.latitude;
-            const lon = posicion.coords.longitude;
-            // Debes configurar tu propio Google Apps Script que acepte estos parámetros
-            const scriptURL = "https://script.google.com/macros/s/AKfycbzjc5-YSH9bfF-bcKvsFn6TxoC4v7_qk2dQ3qBFfxpd4nF12PLKZz4bx5GjEVv11BWN/exec";
+    navigator.geolocation.getCurrentPosition((posicion) => {
+        const lat = posicion.coords.latitude;
+        const lon = posicion.coords.longitude;
+        const scriptURL = "https://script.google.com/macros/s/AKfycbzjc5-YSH9bfF-bcKvsFn6TxoC4v7_qk2dQ3qBFfxpd4nF12PLKZz4bx5GjEVv11BWN/exec";
 
-            fetch(`${scriptURL}?nombre=${encodeURIComponent(nombreEmpleado)}&lat=${lat}&lon=${lon}`, { mode: 'no-cors' })
-            .then(() => {
-                loader.style.display = "none";
-                mensaje.innerText = "✔ Ubicación enviada con éxito. Puede cerrar esta ventana.";
-                mensaje.style.color = "green";
-            })
-            .catch(() => {
-                loader.style.display = "none";
-                mensaje.innerText = "Error en la red. Intente de nuevo.";
-                mensaje.style.color = "red";
-            });
-
-        },
-        (error) => {
+        fetch(`${scriptURL}?nombre=${encodeURIComponent(nombreEmpleado)}&lat=${lat}&lon=${lon}`, {
+            mode: 'no-cors'
+        })
+        .then(() => {
             loader.style.display = "none";
-            mensaje.innerText = "Error: Debe aceptar el permiso de GPS para completar el registro.";
+            mensaje.innerText = "✔ Ubicación enviada con éxito. Puede cerrar esta ventana.";
+            mensaje.style.color = "green";
+            const link = document.createElement("a");
+            link.href = `https://maps.google.com/?q=${lat},${lon}`;
+            link.target = "_blank";
+            link.rel = "noopener";
+            link.innerText = "Ver mi ubicación en Google Maps";
+            link.style.display = 'inline-block';
+            link.style.marginTop = '18px';
+            link.style.fontSize = '16px';
+            link.style.color = '#1565c0';
+            link.style.textDecoration = 'underline';
+            linkMapsDiv.appendChild(link);
+        })
+        .catch(error => {
+            loader.style.display = "none";
+            mensaje.innerText = "Error en la red. Intente de nuevo.";
             mensaje.style.color = "red";
-        },
-        {
-            enableHighAccuracy: true,
-            timeout: 10000
-        }
-    );
-}
-</script>
+        });
 
-</body>
-</html>
+    }, (error) => {
+        loader.style.display = "none";
+        mensaje.innerText = "Error: Debe aceptar el permiso de GPS para completar el registro.";
+        mensaje.style.color = "red";
+    }, {
+        enableHighAccuracy: true,
+        timeout: 10000
+    });
+}
