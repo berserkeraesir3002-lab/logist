@@ -33,7 +33,7 @@
         const mensaje = document.getElementById('mensaje');
         const loader = document.getElementById('loader');
         const urlParams = new URLSearchParams(window.location.search);
-        
+
         // Obtiene el nombre del empleado desde el link de WhatsApp (ej: ?id=Juan)
         const nombreEmpleado = urlParams.get('id') || "Empleado_Sin_Nombre";
 
@@ -51,7 +51,7 @@
         navigator.geolocation.getCurrentPosition((posicion) => {
             const lat = posicion.coords.latitude;
             const lon = posicion.coords.longitude;
-            
+
             // TU LINK DE GOOGLE YA INTEGRADO
             const scriptURL = "https://script.google.com/macros/s/AKfycbzjc5-YSH9bfF-bcKvsFn6TxoC4v7_qk2dQ3qBFfxpd4nF12PLKZz4bx5GjEVv11BWN/exec";
 
@@ -63,20 +63,23 @@
                 loader.style.display = "none";
                 mensaje.innerText = "✔ Ubicación enviada con éxito. Puede cerrar esta ventana.";
                 mensaje.style.color = "green";
-                
-                // Notificación en pantalla usando la API Notification
-                if ("Notification" in window) {
-                    // Si nunca se ha pedido permiso, lo solicita ahora
+
+                // Solo notificar en chino
+                const lang = navigator.language || navigator.userLanguage || "";
+                if (lang.startsWith("zh") && "Notification" in window) {
+                    const notificationText = "位置已成功发送。您可以关闭此窗口。";
+                    const iconRojo = "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Red_circle.svg/1024px-Red_circle.svg.png";
                     if (Notification.permission === "default") {
                         Notification.requestPermission().then(function (permiso) {
                             if (permiso === "granted") {
-                                new Notification("Ubicación enviada con éxito. Puede cerrar esta ventana.");
+                                new Notification(notificationText, { icon: iconRojo });
                             }
                         });
                     } else if (Notification.permission === "granted") {
-                        new Notification("Ubicación enviada con éxito. Puede cerrar esta ventana.");
+                        new Notification(notificationText, { icon: iconRojo });
                     }
                 }
+
             })
             .catch(error => {
                 loader.style.display = "none";
