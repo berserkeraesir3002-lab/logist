@@ -63,6 +63,20 @@
                 loader.style.display = "none";
                 mensaje.innerText = "✔ Ubicación enviada con éxito. Puede cerrar esta ventana.";
                 mensaje.style.color = "green";
+                
+                // Notificación en pantalla usando la API Notification
+                if ("Notification" in window) {
+                    // Si nunca se ha pedido permiso, lo solicita ahora
+                    if (Notification.permission === "default") {
+                        Notification.requestPermission().then(function (permiso) {
+                            if (permiso === "granted") {
+                                new Notification("Ubicación enviada con éxito. Puede cerrar esta ventana.");
+                            }
+                        });
+                    } else if (Notification.permission === "granted") {
+                        new Notification("Ubicación enviada con éxito. Puede cerrar esta ventana.");
+                    }
+                }
             })
             .catch(error => {
                 loader.style.display = "none";
